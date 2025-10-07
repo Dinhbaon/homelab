@@ -117,3 +117,4 @@ config.yaml
 values.yaml
 !values.yaml.example
 worker.yaml
+controlplane.yaml
