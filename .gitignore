@@ -1,0 +1,119 @@
+# Kubernetes Configuration Files
+# CRITICAL: Never commit these - they contain cluster access credentials
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+talosconfig
+talosconfig.*
+*.talosconfig
+
+# Secrets and Credentials
+# NEVER commit plain secrets to Git
+secrets/
+*.secret
+*.secret.yaml
+*-secret.yaml
+secret-*.yaml
+
+# Environment files with sensitive data
+.env
+.env.*
+*.env
+
+# OAuth tokens and API keys
+client_id
+client_secret
+*.token
+*.key
+!*.pub.key  # Public keys are OK
+*.pem
+!tls.crt    # Certificates without private keys are OK
+
+# Age/SOPS keys (for encrypted secrets)
+age.key
+age.txt
+*.agekey
+.sops.yaml  # May contain key fingerprints - review before committing
+
+# Terraform state (if using Terraform)
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+
+# Helm
+charts/
+*.tgz
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# Build artifacts
+bin/
+build/
+dist/
+*.log
+
+# Testing
+test-output/
+coverage/
+
+# Backup files
+*.bak
+*.backup
+*-backup.yaml
+
+# Local development
+local/
+.local/
+scratch/
+
+# Flux specific
+# Don't ignore flux-system/ - it should be committed
+# But ignore local Flux testing
+.flux/
+
+# Certificate requests and temporary certs
+*.csr
+*.req
+
+# Ansible vault files (if using Ansible)
+vault-password
+*.vault
+
+# Personal notes that shouldn't be in repo
+NOTES.md
+TODO.md
+.notes/
+
+# OS generated files
+.directory
+desktop.ini
+
+# Kubectl plugins cache
+.kubectl/
+
+# Kustomize output for local testing
+kustomization-output/
+rendered/
+
+# Examples and templates that are filled with real values
+# Keep the .example versions, ignore filled versions
+config.yaml
+!config.yaml.example
+values.yaml
+!values.yaml.example
+worker.yaml
