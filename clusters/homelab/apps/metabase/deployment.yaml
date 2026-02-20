@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metabase
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metabase-data
+  namespace: metabase
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metabase
+  namespace: metabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: metabase
+  template:
+    metadata:
+      labels:
+        app: metabase
+    spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for MySQL..."
+          until nc -z mysql.mysql.svc.cluster.local 3306; do
+            echo "MySQL not ready, sleeping..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+      containers:
+      - name: metabase
+        image: metabase/metabase:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: "-Xmx1536m"
+        - name: MB_DB_TYPE
+          value: "mysql"
+        - name: MB_DB_DBNAME
+          value: "metabase"
+        - name: MB_DB_PORT
+          value: "3306"
+        - name: MB_DB_USER
+          value: "metabase"
+        - name: MB_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: metabase-secrets
+              key: mysql-password
+        - name: MB_DB_HOST
+          value: "mysql.mysql.svc.cluster.local"
+        volumeMounts:
+        - name: data
+          mountPath: /metabase-data
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: metabase-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metabase
+  namespace: metabase
+spec:
+  selector:
+    app: metabase
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metabase-tailscale
+  namespace: metabase
+  annotations:
+    tailscale.com/expose: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: metabase
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+    protocol: TCP

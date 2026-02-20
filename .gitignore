@@ -33,7 +33,7 @@ client_secret
 age.key
 age.txt
 *.agekey
-.sops.yaml  # May contain key fingerprints - review before committing
+# .sops.yaml contains only public keys and is safe to commit
 
 # Terraform state (if using Terraform)
 *.tfstate

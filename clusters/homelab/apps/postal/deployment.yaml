@@ -1,0 +1,259 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: email
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postal-data
+  namespace: email
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postal
+  namespace: email
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postal
+  template:
+    metadata:
+      labels:
+        app: postal
+    spec:
+      initContainers:
+      - name: wait-for-services
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for MySQL..."
+          until nc -z mysql.mysql.svc.cluster.local 3306; do
+            echo "MySQL not ready, sleeping..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+      containers:
+      - name: postal
+        image: ghcr.io/postalserver/postal:latest
+        command: ["postal"]
+        args: ["web-server"]
+        env:
+        - name: MAIN_DB_HOST
+          value: "mysql.mysql.svc.cluster.local"
+        - name: MAIN_DB_USERNAME
+          value: "postal"
+        - name: MAIN_DB_DATABASE
+          value: "postal"
+        - name: MAIN_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postal-secrets
+              key: mysql-password
+        # Postal v3 config - Message DB
+        - name: MESSAGE_DB_HOST
+          value: "mysql.mysql.svc.cluster.local"
+        - name: MESSAGE_DB_USERNAME
+          value: "postal"
+        - name: MESSAGE_DB_DATABASE_NAME_PREFIX
+          value: "postal"
+        - name: MESSAGE_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postal-secrets
+              key: mysql-password
+        # Postal v3 config - Web Server
+        - name: BIND_ADDRESS
+          value: "0.0.0.0"
+        - name: PORT
+          value: "5000"
+        - name: POSTAL_WEB_HOSTNAME
+          value: "100.68.105.112:32214"
+        # Postal v3 config - DNS/SMTP
+        - name: SMTP_SERVER_HOSTNAME
+          value: "postal.example.com"
+        - name: DNS_MX_RECORDS
+          value: "postal.example.com"
+        - name: DNS_TRACK_DOMAIN
+          value: "postal.example.com"
+        # Rails secret key
+        - name: RAILS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: postal-secrets
+              key: postal-secret-key
+        # Allow access via IP address
+        - name: RAILS_DEVELOPMENT_HOSTS
+          value: "100.68.105.112,.tailscale.ts.net"
+        ports:
+        - containerPort: 5000
+          name: http
+        - containerPort: 25
+          name: smtp
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
+        livenessProbe:
+          tcpSocket:
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: postal-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postal
+  namespace: email
+spec:
+  selector:
+    app: postal
+  ports:
+  - port: 5000
+    targetPort: 5000
+    name: http
+  - port: 25
+    targetPort: 25
+    name: smtp
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postal-worker
+  namespace: email
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postal-worker
+  template:
+    metadata:
+      labels:
+        app: postal-worker
+    spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for MySQL..."
+          until nc -z mysql.mysql.svc.cluster.local 3306; do
+            echo "MySQL not ready, sleeping..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+      containers:
+      - name: postal-worker
+        image: ghcr.io/postalserver/postal:latest
+        command: ["postal"]
+        args: ["worker"]
+        env:
+        - name: MAIN_DB_HOST
+          value: "mysql.mysql.svc.cluster.local"
+        - name: MAIN_DB_USERNAME
+          value: "postal"
+        - name: MAIN_DB_DATABASE
+          value: "postal"
+        - name: MAIN_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postal-secrets
+              key: mysql-password
+        - name: MESSAGE_DB_HOST
+          value: "mysql.mysql.svc.cluster.local"
+        - name: MESSAGE_DB_USERNAME
+          value: "postal"
+        - name: MESSAGE_DB_DATABASE_NAME_PREFIX
+          value: "postal"
+        - name: MESSAGE_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postal-secrets
+              key: mysql-password
+        - name: SMTP_SERVER_HOSTNAME
+          value: "postal.example.com"
+        - name: DNS_MX_RECORDS
+          value: "postal.example.com"
+        - name: DNS_TRACK_DOMAIN
+          value: "postal.example.com"
+        - name: RAILS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: postal-secrets
+              key: postal-secret-key
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "384Mi"
+            cpu: "500m"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: postal-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postal-tailscale
+  namespace: email
+  annotations:
+    tailscale.com/expose: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: postal
+  ports:
+  - port: 5000
+    targetPort: 5000
+    name: http
+    protocol: TCP
+  - port: 25
+    targetPort: 25
+    name: smtp
+    protocol: TCP

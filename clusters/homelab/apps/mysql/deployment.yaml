@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mysql
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+  namespace: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      initContainers:
+      - name: generate-init-sql
+        image: busybox:1.36
+        env:
+        - name: METABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: metabase-password
+        command:
+        - sh
+        - -c
+        - |
+          cat > /init-scripts/init.sql << 'EOF'
+          GRANT ALL PRIVILEGES ON *.* TO 'postal'@'%';
+          CREATE DATABASE IF NOT EXISTS metabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          EOF
+          printf "CREATE USER IF NOT EXISTS 'metabase'@'%%' IDENTIFIED BY '%s';\n" "$METABASE_PASSWORD" >> /init-scripts/init.sql
+          printf "GRANT ALL PRIVILEGES ON metabase.* TO 'metabase'@'%%';\n" >> /init-scripts/init.sql
+          printf "FLUSH PRIVILEGES;\n" >> /init-scripts/init.sql
+        volumeMounts:
+        - name: init-scripts
+          mountPath: /init-scripts
+      containers:
+      - name: mysql
+        image: mariadb:11
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: mysql-root-password
+        - name: MARIADB_DATABASE
+          value: "postal"
+        - name: MARIADB_USER
+          value: "postal"
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: mysql-password
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command: ["mariadb-admin", "ping", "-h", "localhost"]
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command: ["mariadb-admin", "ping", "-h", "localhost"]
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mysql-data
+      - name: init-scripts
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+    name: mysql
+  type: ClusterIP
