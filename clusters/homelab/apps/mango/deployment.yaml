@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mango
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mango-backend
+  namespace: mango
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mango-backend
+  template:
+    metadata:
+      labels:
+        app: mango-backend
+    spec:
+      containers:
+      - name: mango-backend
+        image: dockermangodev/mango-backend:main
+        ports:
+        - containerPort: 3000
+          name: http
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mango-backend
+  namespace: mango
+spec:
+  selector:
+    app: mango-backend
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mango-backend-funnel
+  namespace: mango
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: mango-backend
+  ports:
+  - port: 443
+    targetPort: 3000
+    name: https
+    protocol: TCP
