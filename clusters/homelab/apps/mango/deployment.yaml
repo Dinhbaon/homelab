@@ -51,19 +51,22 @@ spec:
     name: http
   type: ClusterIP
 ---
-apiVersion: v1
-kind: Service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: mango-backend-funnel
+  name: mango-backend
   namespace: mango
   annotations:
     tailscale.com/funnel: "true"
 spec:
-  type: LoadBalancer
-  selector:
-    app: mango-backend
-  ports:
-  - port: 443
-    targetPort: 3000
-    name: https
-    protocol: TCP
+  ingressClassName: tailscale
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mango-backend
+            port:
+              number: 3000
