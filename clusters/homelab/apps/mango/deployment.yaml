@@ -26,6 +26,9 @@ spec:
         ports:
         - containerPort: 3000
           name: http
+        envFrom:
+        - secretRef:
+            name: mango-secret
         resources:
           requests:
             memory: "128Mi"
