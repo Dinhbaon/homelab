@@ -23,6 +23,7 @@ spec:
       containers:
       - name: mango-backend
         image: dockermangodev/mango-backend:main
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
           name: http
