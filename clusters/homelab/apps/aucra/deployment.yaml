@@ -118,6 +118,8 @@ kind: Service
 metadata:
   name: aucra-dsp-apo
   namespace: aucra
+  annotations:
+    tailscale.com/expose: "true"
 spec:
   selector:
     app: aucra-dsp-apo
@@ -125,7 +127,7 @@ spec:
   - port: 3000
     targetPort: 3000
     name: http
-  type: ClusterIP
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -175,6 +177,8 @@ kind: Service
 metadata:
   name: aucra-ssp-api
   namespace: aucra
+  annotations:
+    tailscale.com/expose: "true"
 spec:
   selector:
     app: aucra-ssp-api
@@ -182,4 +186,4 @@ spec:
   - port: 8080
     targetPort: 8080
     name: http
-  type: ClusterIP
+  type: LoadBalancer
