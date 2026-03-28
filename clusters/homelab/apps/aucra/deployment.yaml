@@ -53,6 +53,7 @@ metadata:
   namespace: aucra
   annotations:
     tailscale.com/expose: "true"
+    tailscale.com/funnel: "true"
 spec:
   selector:
     app: aucra-dsp-api
@@ -112,6 +113,7 @@ metadata:
   namespace: aucra
   annotations:
     tailscale.com/expose: "true"
+    tailscale.com/funnel: "true"
 spec:
   selector:
     app: aucra-ssp-api
