@@ -89,7 +89,7 @@ spec:
     spec:
       containers:
       - name: aucra-dsp-api
-        image: aucra/aucra-dsp-api:main
+        image: aucra/aucra-dsp-api:master
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
