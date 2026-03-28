@@ -8,73 +8,6 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: aucra-backend
-  namespace: aucra
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: aucra-backend
-  template:
-    metadata:
-      labels:
-        app: aucra-backend
-    spec:
-      containers:
-      - name: aucra-backend
-        image: dockeraucradev/aucra-backend:main
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 3000
-          name: http
-        envFrom:
-        - secretRef:
-            name: aucra-secret
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: aucra-backend
-  namespace: aucra
-spec:
-  selector:
-    app: aucra-backend
-  ports:
-  - port: 3000
-    targetPort: 3000
-    name: http
-  type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: aucra-backend
-  namespace: aucra
-  annotations:
-    tailscale.com/funnel: "true"
-spec:
-  ingressClassName: tailscale
-  rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: aucra-backend
-            port:
-              number: 3000
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: aucra-dsp-api
   namespace: aucra
 spec:
@@ -89,7 +22,7 @@ spec:
     spec:
       containers:
       - name: aucra-dsp-api
-        image: aucra/aucra-dsp-api:master
+        image: aucra/aucra-dsp-api:main
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -146,7 +79,7 @@ spec:
     spec:
       containers:
       - name: aucra-ssp-api
-        image: aucra/aucra-ssp-api:master
+        image: aucra/aucra-ssp-api:main
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
