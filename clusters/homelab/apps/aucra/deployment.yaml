@@ -146,7 +146,7 @@ spec:
     spec:
       containers:
       - name: aucra-ssp-api
-        image: aucra/aucra-ssp-api:main
+        image: aucra/aucra-ssp-api:master
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
