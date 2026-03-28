@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-data
-  namespace: mango
+  namespace: aucra
 spec:
   accessModes:
     - ReadWriteOnce
@@ -15,7 +15,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: mango
+  namespace: aucra
 spec:
   replicas: 1
   strategy:
@@ -36,16 +36,16 @@ spec:
           name: postgres
         env:
         - name: POSTGRES_DB
-          value: mango
+          value: aucra
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: mango-secret
+              name: aucra-secret
               key: POSTGRES_USER
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mango-secret
+              name: aucra-secret
               key: POSTGRES_PASSWORD
         volumeMounts:
         - name: data
@@ -57,15 +57,25 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - |
+                  until pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do sleep 2; done
+                  psql -U "$POSTGRES_USER" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='dsp'" | grep -q 1 || psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE dsp"
+                  psql -U "$POSTGRES_USER" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='ssp'" | grep -q 1 || psql -U "$POSTGRES_USER" -d postgres -c "CREATE DATABASE ssp"
         livenessProbe:
           exec:
-            command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "mango"]
+            command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "aucra"]
           initialDelaySeconds: 30
           timeoutSeconds: 5
           periodSeconds: 10
         readinessProbe:
           exec:
-            command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "mango"]
+            command: ["pg_isready", "-U", "$(POSTGRES_USER)", "-d", "aucra"]
           initialDelaySeconds: 5
           timeoutSeconds: 5
           periodSeconds: 5
@@ -78,7 +88,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: mango
+  namespace: aucra
 spec:
   selector:
     app: postgres

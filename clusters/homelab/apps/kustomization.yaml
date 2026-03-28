@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
 - postal/
 - mysql/
-- mango/
+- aucra/

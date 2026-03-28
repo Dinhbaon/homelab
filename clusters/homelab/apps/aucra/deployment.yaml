@@ -1,0 +1,185 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aucra
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aucra-backend
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aucra-backend
+  template:
+    metadata:
+      labels:
+        app: aucra-backend
+    spec:
+      containers:
+      - name: aucra-backend
+        image: dockeraucradev/aucra-backend:main
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        envFrom:
+        - secretRef:
+            name: aucra-secret
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aucra-backend
+  namespace: aucra
+spec:
+  selector:
+    app: aucra-backend
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aucra-backend
+  namespace: aucra
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aucra-backend
+            port:
+              number: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aucra-dsp-apo
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aucra-dsp-apo
+  template:
+    metadata:
+      labels:
+        app: aucra-dsp-apo
+    spec:
+      containers:
+      - name: aucra-dsp-apo
+        image: dockeraucradev/aucra-dsp-apo:main
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        envFrom:
+        - secretRef:
+            name: aucra-secret
+        env:
+        - name: PORT
+          value: "3000"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: POSTGRES_PASSWORD
+        - name: DATABASE_URL
+          value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/dsp?sslmode=disable
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aucra-dsp-apo
+  namespace: aucra
+spec:
+  selector:
+    app: aucra-dsp-apo
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aucra-ssp-api
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aucra-ssp-api
+  template:
+    metadata:
+      labels:
+        app: aucra-ssp-api
+    spec:
+      containers:
+      - name: aucra-ssp-api
+        image: dockeraucradev/aucra-ssp-api:main
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        envFrom:
+        - secretRef:
+            name: aucra-secret
+        env:
+        - name: PORT
+          value: "8080"
+        - name: SSP_BASE_URL
+          value: http://aucra-ssp-api.aucra.svc.cluster.local:8080
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: POSTGRES_PASSWORD
+        - name: DATABASE_URL
+          value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/ssp?sslmode=disable
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aucra-ssp-api
+  namespace: aucra
+spec:
+  selector:
+    app: aucra-ssp-api
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
