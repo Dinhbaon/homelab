@@ -89,7 +89,7 @@ spec:
     spec:
       containers:
       - name: aucra-dsp-apo
-        image: dockeraucradev/aucra-dsp-apo:main
+        image: aucra/aucra-dsp-apo:main
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -146,7 +146,7 @@ spec:
     spec:
       containers:
       - name: aucra-ssp-api
-        image: dockeraucradev/aucra-ssp-api:main
+        image: aucra/aucra-ssp-api:main
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
