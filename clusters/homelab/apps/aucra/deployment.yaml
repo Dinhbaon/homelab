@@ -81,6 +81,81 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: aucra-admin-portal
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aucra-admin-portal
+  template:
+    metadata:
+      labels:
+        app: aucra-admin-portal
+    spec:
+      containers:
+      - name: aucra-admin-portal
+        image: aucra/aucra-admin-portal:main
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001
+          name: http
+        envFrom:
+        - secretRef:
+            name: aucra-secret
+        env:
+        - name: PORT
+          value: "3001"
+        - name: SSP_API_URL
+          value: http://aucra-ssp-api.aucra.svc.cluster.local:8080
+        - name: DSP_API_URL
+          value: http://aucra-dsp-api.aucra.svc.cluster.local:3000
+        - name: SSP_ADMIN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: ADMIN_KEY
+        - name: DSP_ADMIN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: ADMIN_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aucra-admin-portal
+  namespace: aucra
+spec:
+  selector:
+    app: aucra-admin-portal
+  ports:
+  - port: 3001
+    targetPort: 3001
+    name: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aucra-admin-portal
+  namespace: aucra
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: aucra-admin-portal
+      port:
+        number: 3001
+  tls:
+  - hosts:
+    - aucra-admin-portal
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: aucra-ssp-api
   namespace: aucra
 spec:
