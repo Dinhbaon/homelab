@@ -51,9 +51,6 @@ kind: Service
 metadata:
   name: aucra-dsp-api
   namespace: aucra
-  annotations:
-    tailscale.com/expose: "true"
-    tailscale.com/funnel: "true"
 spec:
   selector:
     app: aucra-dsp-api
@@ -61,7 +58,25 @@ spec:
   - port: 3000
     targetPort: 3000
     name: http
-  type: LoadBalancer
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aucra-dsp-api
+  namespace: aucra
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: aucra-dsp-api
+      port:
+        number: 3000
+  tls:
+  - hosts:
+    - aucra-dsp-api
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -111,9 +126,6 @@ kind: Service
 metadata:
   name: aucra-ssp-api
   namespace: aucra
-  annotations:
-    tailscale.com/expose: "true"
-    tailscale.com/funnel: "true"
 spec:
   selector:
     app: aucra-ssp-api
@@ -121,4 +133,22 @@ spec:
   - port: 8080
     targetPort: 8080
     name: http
-  type: LoadBalancer
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aucra-ssp-api
+  namespace: aucra
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: aucra-ssp-api
+      port:
+        number: 8080
+  tls:
+  - hosts:
+    - aucra-ssp-api
