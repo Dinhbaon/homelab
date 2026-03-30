@@ -120,6 +120,8 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: ADMIN_KEY
+        - name: GOOGLE_CALLBACK_URL
+          value: https://aucra-admin-portal.tail9b3001.ts.net/api/auth/google/callback
 ---
 apiVersion: v1
 kind: Service
