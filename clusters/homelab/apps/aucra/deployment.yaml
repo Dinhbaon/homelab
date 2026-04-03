@@ -174,6 +174,16 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: JWTRefreshTTL
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: GOOGLE_CLIENT_ID
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: GOOGLE_CLIENT_SECRET
 ---
 apiVersion: v1
 kind: Service
