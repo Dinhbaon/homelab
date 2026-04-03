@@ -184,6 +184,51 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: GOOGLE_CLIENT_SECRET
+        - name: ADMIN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: ADMIN_KEY
+        - name: DSP_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_API_SECRET
+        - name: DSP_BID_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_BID_ENDPOINT
+        - name: DSP_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_DATABASE_URL
+        - name: DSP_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_ID
+        - name: DSP_NAME
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_NAME
+        - name: FRONTEND_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: FRONTEND_URL
+        - name: SSP_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: SSP_DATABASE_URL
+        - name: WHITELISTED_EMAILS
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: WHITELISTED_EMAILS
 ---
 apiVersion: v1
 kind: Service
