@@ -27,24 +27,14 @@ spec:
         ports:
         - containerPort: 3000
           name: http
-        envFrom:
-        - secretRef:
-            name: aucra-secret
         env:
         - name: PORT
           value: "3000"
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: aucra-secret
-              key: POSTGRES_USER
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: aucra-secret
-              key: POSTGRES_PASSWORD
         - name: DATABASE_URL
-          value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/dsp?sslmode=disable
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_DATABASE_URL
 ---
 apiVersion: v1
 kind: Service
@@ -100,9 +90,6 @@ spec:
         ports:
         - containerPort: 3001
           name: http
-        envFrom:
-        - secretRef:
-            name: aucra-secret
         env:
         - name: PORT
           value: "3001"
@@ -122,6 +109,41 @@ spec:
               key: ADMIN_KEY
         - name: GOOGLE_CALLBACK_URL
           value: https://aucra-admin-portal.tail9b3001.ts.net/api/auth/google/callback
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: BETTER_AUTH_SECRET
+        - name: BETTER_AUTH_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: BETTER_AUTH_BASE_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: JWT_SECRET
+        - name: JWT_ACCESS_TOKEN_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: JWT_ACCESS_TOKEN_SECRET
+        - name: JWT_REFRESH_TOKEN_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: JWT_REFRESH_TOKEN_SECRET
+        - name: JWTAccessTTL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: JWTAccessTTL
+        - name: JWTRefreshTTL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: JWTRefreshTTL
 ---
 apiVersion: v1
 kind: Service
@@ -177,26 +199,16 @@ spec:
         ports:
         - containerPort: 8080
           name: http
-        envFrom:
-        - secretRef:
-            name: aucra-secret
         env:
         - name: PORT
           value: "8080"
         - name: SSP_BASE_URL
           value: http://aucra-ssp-api.aucra.svc.cluster.local:8080
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: aucra-secret
-              key: POSTGRES_USER
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: aucra-secret
-              key: POSTGRES_PASSWORD
         - name: DATABASE_URL
-          value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/ssp?sslmode=disable
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: SSP_DATABASE_URL
 ---
 apiVersion: v1
 kind: Service
