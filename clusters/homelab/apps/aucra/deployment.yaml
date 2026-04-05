@@ -65,6 +65,16 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: DSP_ID
+        - name: R2_BUCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_BUCKET_URL
+        - name: R2_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_ACCESS_KEY_ID
 ---
 apiVersion: v1
 kind: Service
@@ -229,6 +239,16 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: WHITELISTED_EMAILS
+        - name: R2_BUCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_BUCKET_URL
+        - name: R2_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_ACCESS_KEY_ID
 ---
 apiVersion: v1
 kind: Service
@@ -324,6 +344,16 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: DSP_ID
+        - name: R2_BUCKET_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_BUCKET_URL
+        - name: R2_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_ACCESS_KEY_ID
 ---
 apiVersion: v1
 kind: Service
