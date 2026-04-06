@@ -318,7 +318,7 @@ spec:
         - name: PORT
           value: "8080"
         - name: SSP_BASE_URL
-          value: http://aucra-ssp-api.aucra.svc.cluster.local:8080
+          value: https://aucra-ssp-api.tail9b3001.ts.net
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
