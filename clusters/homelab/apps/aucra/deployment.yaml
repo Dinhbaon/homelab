@@ -70,11 +70,11 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: R2_BUCKET_URL
-        - name: R2_ACCESS_KEY_ID
+        - name: R2_TOKEN
           valueFrom:
             secretKeyRef:
               name: aucra-secret
-              key: R2_ACCESS_KEY_ID
+              key: R2_TOKEN
 ---
 apiVersion: v1
 kind: Service
@@ -244,11 +244,11 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: R2_BUCKET_URL
-        - name: R2_ACCESS_KEY_ID
+        - name: R2_TOKEN
           valueFrom:
             secretKeyRef:
               name: aucra-secret
-              key: R2_ACCESS_KEY_ID
+              key: R2_TOKEN
 ---
 apiVersion: v1
 kind: Service
@@ -349,11 +349,11 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: R2_BUCKET_URL
-        - name: R2_ACCESS_KEY_ID
+        - name: R2_TOKEN
           valueFrom:
             secretKeyRef:
               name: aucra-secret
-              key: R2_ACCESS_KEY_ID
+              key: R2_TOKEN
 ---
 apiVersion: v1
 kind: Service
