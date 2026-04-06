@@ -75,6 +75,16 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: R2_TOKEN
+        - name: R2_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_ACCESS_KEY_ID
+        - name: R2_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_SECRET_ACCESS_KEY
 ---
 apiVersion: v1
 kind: Service
@@ -354,6 +364,16 @@ spec:
             secretKeyRef:
               name: aucra-secret
               key: R2_TOKEN
+        - name: R2_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_ACCESS_KEY_ID
+        - name: R2_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: R2_SECRET_ACCESS_KEY
 ---
 apiVersion: v1
 kind: Service
