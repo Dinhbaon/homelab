@@ -4,7 +4,7 @@ metadata:
   name: cache-tester
   namespace: aucra
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "0 * * * *"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid
@@ -43,6 +43,6 @@ spec:
             - --provider
             - "claude"
             - --urls
-            - "https://redditcollegeresults.com,https://www.redditcollegeresults.com,https://example.com"
+            - "https://redditcollegeresults.com"
             - --wait
             - "3"
