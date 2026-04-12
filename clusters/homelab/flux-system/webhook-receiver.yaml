@@ -1,0 +1,38 @@
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Receiver
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  type: github
+  secretRef:
+    name: webhook-token
+  resources:
+    - kind: GitRepository
+      name: flux-system
+    - kind: Kustomization
+      name: flux-system
+    - kind: Kustomization
+      name: infrastructure
+      namespace: flux-system
+    - kind: Kustomization
+      name: apps
+      namespace: flux-system
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flux-webhook
+  namespace: flux-system
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: webhook-receiver
+      port:
+        number: 80
+  tls:
+  - hosts:
+    - flux-webhook
