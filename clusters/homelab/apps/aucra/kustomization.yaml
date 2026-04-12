@@ -4,3 +4,4 @@ resources:
 - secret.yaml
 - postgres.yaml
 - deployment.yaml
+- cache-tester-cronjob.yaml
