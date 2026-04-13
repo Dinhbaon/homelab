@@ -5,3 +5,5 @@ resources:
 - postgres.yaml
 - deployment.yaml
 - cache-tester-cronjob.yaml
+- rbac.yaml
+- monitoring.yaml
