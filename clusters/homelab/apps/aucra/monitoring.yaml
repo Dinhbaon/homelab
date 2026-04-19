@@ -81,6 +81,8 @@ metadata:
   namespace: aucra
   labels:
     app: prometheus
+  annotations:
+    tailscale.com/expose: "true"
 spec:
   selector:
     app: prometheus
@@ -88,12 +90,28 @@ spec:
   - name: http
     port: 9090
     targetPort: 9090
-  type: ClusterIP
+  type: LoadBalancer
 
 ---
-# ─────────────────────────────────────────────────────────────────────────────
-# Grafana ConfigMaps — datasource + dashboard provider auto-provisioning
-# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: aucra
+  labels:
+    app: grafana
+  annotations:
+    tailscale.com/expose: "true"
+spec:
+  selector:
+    app: grafana
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+  type: LoadBalancer
+
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -196,6 +214,8 @@ metadata:
   namespace: aucra
   labels:
     app: grafana
+  annotations:
+    tailscale.com/expose: "true"
 spec:
   selector:
     app: grafana
@@ -203,4 +223,4 @@ spec:
   - name: http
     port: 3000
     targetPort: 3000
-  type: ClusterIP
+  type: LoadBalancer
