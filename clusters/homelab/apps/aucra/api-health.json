@@ -1,0 +1,57 @@
+{
+  "title": "Aucra API Health",
+  "tags": ["api", "health"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Global Requests Per Second",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "RPS"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "title": "5xx Error Rate",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m]))",
+          "legendFormat": "5xx Errors/sec"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "title": "Traffic by Status Code & Route",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m])) by (status, route)",
+          "legendFormat": "{{status}} - {{route}}"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 6 }
+    },
+    {
+      "title": "Request Latency (p95)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, route))",
+          "legendFormat": "{{route}} p95"
+        }
+      ],
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 }
+    }
+  ],
+  "schemaVersion": 38,
+  "refresh": "10s"
+}

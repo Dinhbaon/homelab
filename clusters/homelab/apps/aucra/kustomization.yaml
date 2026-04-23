@@ -7,3 +7,8 @@ resources:
 - cache-tester-cronjob.yaml
 - rbac.yaml
 - monitoring.yaml
+configMapGenerator:
+- name: grafana-dashboards
+  namespace: aucra
+  files:
+  - api-health.json

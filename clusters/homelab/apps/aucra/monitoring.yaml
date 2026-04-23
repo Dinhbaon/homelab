@@ -146,6 +146,7 @@ data:
         updateIntervalSeconds: 10
         options:
           path: /var/lib/grafana/dashboards
+          path: /etc/grafana/dashboards
 
 ---
 # ─────────────────────────────────────────────────────────────────────────────
@@ -187,6 +188,8 @@ spec:
           mountPath: /etc/grafana/provisioning/datasources
         - name: dashboard-provider
           mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /etc/grafana/dashboards
         - name: data
           mountPath: /var/lib/grafana
         resources:
@@ -203,6 +206,9 @@ spec:
       - name: dashboard-provider
         configMap:
           name: grafana-dashboard-provider
+      - name: dashboards
+        configMap:
+          name: grafana-dashboards
       - name: data
         emptyDir: {}
 
