@@ -211,21 +211,3 @@ spec:
       - name: data
         emptyDir: {}
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: grafana
-  namespace: aucra
-  labels:
-    app: grafana
-  annotations:
-    tailscale.com/expose: "true"
-spec:
-  selector:
-    app: grafana
-  ports:
-  - name: http
-    port: 3000
-    targetPort: 3000
-  type: LoadBalancer
