@@ -289,17 +289,34 @@ metadata:
   name: tempo-config
   namespace: aucra
 data:
-  tempo.yaml: |
-    server:
-      http_listen_port: 3100
-    distributor:
-      receivers:
-        otlp:
-          protocols:
-            grpc:
-              endpoint: 0.0.0.0:4317
-    storage:
-      trace:
-        backend: local
-        local:
-          path: /var/tempo/traces
+    tempo.yaml: |
+      server:
+        http_listen_port: 3100
+      
+      distributor:
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: 0.0.0.0:4317
+      
+      ingester:
+        lifecycler:
+          address: 127.0.0.1
+          ring:
+            kvstore:
+              store: inmemory
+            replication_factor: 1
+      
+      compactor:
+        config:
+          repository: local
+          local:
+            path: /var/tempo/compacted
+      
+      storage:
+        trace:
+          backend: local
+          local:
+            path: /var/tempo/traces
+
