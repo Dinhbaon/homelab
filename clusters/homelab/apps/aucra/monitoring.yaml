@@ -240,8 +240,9 @@ spec:
       containers:
       - name: tempo
         image: grafana/tempo:latest
+        command: ["/bin/sh", "-c"]
         args:
-          - -config.file=/etc/tempo/tempo.yaml
+          - "/tempo -config.file=/etc/tempo/tempo.yaml 2> /dev/termination-log || exit 1"
         ports:
         - containerPort: 4317
           name: otlp
