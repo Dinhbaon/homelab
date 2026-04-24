@@ -127,6 +127,12 @@ data:
         access: proxy
         isDefault: true
         editable: false
+      - name: Tempo
+        type: tempo
+        url: http://tempo.aucra.svc.cluster.local:3100
+        access: proxy
+        isDefault: false
+        editable: false
 
 ---
 apiVersion: v1
@@ -211,3 +217,89 @@ spec:
       - name: data
         emptyDir: {}
 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+      - name: tempo
+        image: grafana/tempo:latest
+        args:
+          - "-config.file=/etc/tempo.yaml"
+        ports:
+        - containerPort: 4317
+          name: otlp
+        - containerPort: 3100
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /etc/tempo
+        - name: data
+          mountPath: /var/tempo
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 256Mi
+      volumes:
+      - name: config
+        configMap:
+          name: tempo-config
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: aucra
+  labels:
+    app: tempo
+  annotations:
+    tailscale.com/expose: "true"
+spec:
+  selector:
+    app: tempo
+  ports:
+  - name: otlp
+    port: 4317
+    targetPort: 4317
+  - name: http
+    port: 3100
+    targetPort: 3100
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: aucra
+data:
+  tempo.yaml: |
+    server:
+      http_listen_port: 3100
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /var/tempo/traces
