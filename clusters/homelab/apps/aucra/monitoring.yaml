@@ -302,31 +302,27 @@ data:
         otlp:
           protocols:
             grpc:
+              endpoint: 0.0.0.0:4317
 
     ingester:
-      trace_idle_period: 10s
-      max_block_duration: 5m
-
-    compactor:
-      compaction:
-        compaction_window: 1h
-        max_block_bytes: 100000000
-        block_retention: 1h
-
-    # MANDATORY: This tells Tempo we are a single node and to stop searching for a cluster!
-    memberlist:
-      abort_if_cluster_join_fails: false
-      bind_port: 7946
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
 
     storage:
       trace:
         backend: local
-        local:
-          path: /var/tempo/blocks
         wal:
           path: /var/tempo/wal
+        local:
+          path: /var/tempo/traces
 
-    search_enabled: true
+    overrides:
+      defaults:
+        ingestion:
+          max_traces_per_user: 0
 
 
 
