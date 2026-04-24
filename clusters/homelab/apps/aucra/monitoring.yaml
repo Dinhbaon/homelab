@@ -292,31 +292,41 @@ data:
     tempo.yaml: |
       server:
         http_listen_port: 3100
-      
+
       distributor:
         receivers:
           otlp:
             protocols:
               grpc:
                 endpoint: 0.0.0.0:4317
-      
+
       ingester:
         lifecycler:
-          address: 127.0.0.1
           ring:
             kvstore:
               store: inmemory
             replication_factor: 1
-      
+
       compactor:
         config:
           repository: local
           local:
             path: /var/tempo/compacted
-      
+
       storage:
         trace:
           backend: local
           local:
             path: /var/tempo/traces
+
+      # MANDATORY: This tells Tempo we are a single node and to stop searching for a cluster!
+      memberlist:
+        abort_if_cluster_join_fails: false
+        bind_port: 7946
+
+      overrides:
+        defaults:
+          ingestion:
+            max_traces_per_user: 0
+
 
