@@ -294,6 +294,8 @@ metadata:
   namespace: aucra
 data:
   tempo.yaml: |
+    target: all
+
     server:
       http_listen_port: 3100
 
@@ -304,13 +306,6 @@ data:
             grpc:
               endpoint: 0.0.0.0:4317
 
-    ingester:
-      lifecycler:
-        ring:
-          kvstore:
-            store: inmemory
-          replication_factor: 1
-
     storage:
       trace:
         backend: local
@@ -318,11 +313,6 @@ data:
           path: /var/tempo/wal
         local:
           path: /var/tempo/traces
-
-    overrides:
-      defaults:
-        ingestion:
-          max_traces_per_user: 0
 
 
 
