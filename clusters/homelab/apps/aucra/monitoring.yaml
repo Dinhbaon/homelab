@@ -237,7 +237,7 @@ spec:
       - name: tempo
         image: grafana/tempo:latest
         args:
-          - "-config.file=/etc/tempo.yaml"
+          - -config.file=/etc/tempo/tempo.yaml
         ports:
         - containerPort: 4317
           name: otlp
@@ -300,27 +300,34 @@ data:
             grpc:
               endpoint: 0.0.0.0:4317
 
+    # This is the part I missed! Mandatory for single-node.
+    memberlist:
+      abort_if_cluster_join_fails: false
+      bind_port: 7946
+
+    ingester:
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+
     compactor:
-      compaction:
-        compaction_window: 1h              # Initial compaction runs after 1 hour
-        max_block_bytes: 100000000         # 100MB
-        block_retention: 1h
-        compacted_block_retention: 10m
+      config:
+        repository: local
+        local:
+          path: /var/tempo/compacted
 
     storage:
       trace:
-        backend: local                     # Backend configuration to use
+        backend: local
         wal:
-          path: /var/tempo/wal             # Where to store the wal locally
+          path: /var/tempo/wal
         local:
-          path: /var/tempo/blocks
+          path: /var/tempo/traces
 
     search_enabled: true
 
-    overrides:
-      defaults:
-        metrics_generator:
-          processors: [service-graphs, span-metrics]
 
 
 
