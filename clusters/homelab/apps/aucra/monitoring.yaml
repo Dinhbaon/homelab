@@ -127,12 +127,6 @@ data:
         access: proxy
         isDefault: true
         editable: false
-      - name: loki
-        type: loki
-        url: http://loki-stack:3100
-        access: proxy
-        isDefault: false
-        editable: false
 
 ---
 apiVersion: v1

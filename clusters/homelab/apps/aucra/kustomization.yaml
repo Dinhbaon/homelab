@@ -7,7 +7,6 @@ resources:
 - cache-tester-cronjob.yaml
 - rbac.yaml
 - monitoring.yaml
-- logging.yaml
 configMapGenerator:
 - name: grafana-dashboards
   namespace: aucra
