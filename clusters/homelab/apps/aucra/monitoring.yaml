@@ -127,6 +127,12 @@ data:
         access: proxy
         isDefault: true
         editable: false
+      - name: Tempo
+        type: tempo
+        url: http://tempo.aucra.svc.cluster.local:3100
+        access: proxy
+        isDefault: false
+        editable: false
 
 ---
 apiVersion: v1
@@ -145,7 +151,7 @@ data:
         disableDeletion: false
         updateIntervalSeconds: 10
         options:
-          path: /var/lib/grafana/dashboards
+          path: /etc/grafana/dashboards
 
 ---
 # ─────────────────────────────────────────────────────────────────────────────
@@ -187,6 +193,8 @@ spec:
           mountPath: /etc/grafana/provisioning/datasources
         - name: dashboard-provider
           mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /etc/grafana/dashboards
         - name: data
           mountPath: /var/lib/grafana
         resources:
@@ -203,24 +211,161 @@ spec:
       - name: dashboard-provider
         configMap:
           name: grafana-dashboard-provider
+      - name: dashboards
+        configMap:
+          name: grafana-dashboards
       - name: data
         emptyDir: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsGroup: 10001
+      containers:
+      - name: tempo
+        image: grafana/tempo:latest
+        args:
+          - "-config.file=/etc/tempo/tempo.yaml"
+        ports:
+        - containerPort: 4317
+          name: otlp
+        - containerPort: 3100
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /etc/tempo
+        - name: data
+          mountPath: /var/tempo
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 256Mi
+      volumes:
+      - name: config
+        configMap:
+          name: tempo-config
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: aucra
+  labels:
+    app: tempo
+  annotations:
+    tailscale.com/expose: "true"
+spec:
+  selector:
+    app: tempo
+  ports:
+  - name: otlp
+    port: 4317
+    targetPort: 4317
+  - name: http
+    port: 3100
+    targetPort: 3100
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: aucra
+data:
+  tempo.yaml: |
+    target: all
+
+    server:
+      http_listen_port: 3100
+
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+
+    storage:
+      trace:
+        backend: local
+        wal:
+          path: /var/tempo/wal
+        local:
+          path: /var/tempo/traces
+
+
+# Uptime Kuma Notifications
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uptime-kuma-data
+  namespace: aucra
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uptime-kuma
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uptime-kuma
+  template:
+    metadata:
+      labels:
+        app: uptime-kuma
+    spec:
+      containers:
+      - name: uptime-kuma
+        image: louislam/uptime-kuma:1
+        ports:
+        - containerPort: 3001
+        volumeMounts:
+        - name: kuma-data
+          mountPath: /app/data
+      volumes:
+      - name: kuma-data
+        persistentVolumeClaim:
+          claimName: uptime-kuma-data
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: grafana
+  name: uptime-kuma
   namespace: aucra
-  labels:
-    app: grafana
-  annotations:
-    tailscale.com/expose: "true"
 spec:
-  selector:
-    app: grafana
   ports:
-  - name: http
-    port: 3000
-    targetPort: 3000
-  type: LoadBalancer
+  - port: 3001
+  selector:
+    app: uptime-kuma

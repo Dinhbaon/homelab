@@ -11,7 +11,7 @@ metadata:
   namespace: aucra
 rules:
 - apiGroups: [""]
-  resources: ["pods", "services", "configmaps", "secrets", "persistentvolumeclaims"]
+  resources: ["pods", "pods/log", "pods/exec", "services", "configmaps", "secrets", "persistentvolumeclaims", "events"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["apps"]
   resources: ["deployments", "statefulsets", "replicasets"]
