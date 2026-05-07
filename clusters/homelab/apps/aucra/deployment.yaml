@@ -394,10 +394,47 @@ spec:
     name: http
   type: ClusterIP
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beava
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beava
+  template:
+    metadata:
+      labels:
+        app: beava
+    spec:
+      containers:
+      - name: beava
+        image: beava/beava:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beava
+  namespace: aucra
+spec:
+  selector:
+    app: beava
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: aucra-ssp-api
+  name: beava
   namespace: aucra
   annotations:
     tailscale.com/funnel: "true"
@@ -405,9 +442,9 @@ spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: aucra-ssp-api
+      name: beava
       port:
         number: 8080
   tls:
   - hosts:
-    - aucra-ssp-api
+    - beava
