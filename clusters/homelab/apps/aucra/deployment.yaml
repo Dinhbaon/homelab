@@ -436,8 +436,6 @@ kind: Ingress
 metadata:
   name: beava
   namespace: aucra
-  annotations:
-    tailscale.com/funnel: "true"
 spec:
   ingressClassName: tailscale
   defaultBackend:
