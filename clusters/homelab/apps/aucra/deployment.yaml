@@ -411,7 +411,7 @@ spec:
     spec:
       containers:
       - name: beava
-        image: beava/beava:latest
+        image: beavadev/beava:edge
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -448,3 +448,113 @@ spec:
   tls:
   - hosts:
     - beava
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aucra-billing-service
+  namespace: aucra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aucra-billing-service
+  template:
+    metadata:
+      labels:
+        app: aucra-billing-service
+    spec:
+      containers:
+      - name: aucra-billing-service
+        image: aucra/aucra-billing-service:main
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: ENVIRONMENT
+          value: prod
+        - name: ADMIN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: ADMIN_KEY
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_DATABASE_URL
+        - name: DSP_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: DSP_DATABASE_URL
+        - name: SSP_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: SSP_DATABASE_URL
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: STRIPE_SECRET_KEY
+        - name: STRIPE_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: STRIPE_WEBHOOK_SECRET
+        - name: STRIPE_TEST_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: STRIPE_TEST_SECRET_KEY
+        - name: STRIPE_TEST_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: STRIPE_TEST_WEBHOOK_SECRET
+        - name: MINIMUM_PAYOUT_CENTS
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: MINIMUM_PAYOUT_CENTS
+        - name: LOW_BALANCE_THRESHOLD_PCT
+          valueFrom:
+            secretKeyRef:
+              name: aucra-secret
+              key: LOW_BALANCE_THRESHOLD_PCT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aucra-billing-service
+  namespace: aucra
+spec:
+  selector:
+    app: aucra-billing-service
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aucra-billing-service
+  namespace: aucra
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: aucra-billing-service
+      port:
+        number: 8080
+  tls:
+  - hosts:
+    - aucra-billing-service
