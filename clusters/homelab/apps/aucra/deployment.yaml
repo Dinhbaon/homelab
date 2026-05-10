@@ -394,6 +394,24 @@ spec:
     name: http
   type: ClusterIP
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aucra-ssp-api
+  namespace: aucra
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: aucra-ssp-api
+      port:
+        number: 8080
+  tls:
+  - hosts:
+    - aucra-ssp-api
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
