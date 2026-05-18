@@ -342,7 +342,7 @@ spec:
                 advertiser_id: str
                 publisher_id: str
                 llm_ua: str
-                unit_milli_cents: float
+                charge_milli_cents: float
                 active_until: int
 
             @bv.table(key="page_id")
@@ -368,7 +368,7 @@ spec:
                 advertiser_id: str
                 publisher_id: str
                 llm_ua: str
-                unit_milli_cents: float
+                charge_milli_cents: float
                 active_until: int
 
             @bv.table(key="page_id")
