@@ -329,7 +329,34 @@ spec:
       initContainers:
       - name: pipeline-init
         image: python:3.12-slim
-        command: ["python", "-c"]
+        command: ["sh", "-c"]
+        args:
+          - |
+            pip install beava && python -c "
+            import beava as bv
+            import os
+
+            @bv.event
+            class ActivationEvent:
+                page_id: str
+                advertiser_id: str
+                publisher_id: str
+                llm_ua: str
+                unit_milli_cents: float
+                active_until: int
+
+            @bv.table(key="page_id")
+            def PageActivity(ev: ActivationEvent):
+                return ev.group_by("page_id").agg(
+                    activations_24h=bv.count(window="24h"),
+                    activations_7d=bv.count(window="168h"),
+                    distinct_llms_7d=bv.n_unique("llm_ua", window="168h"),
+                    last_activated_at=bv.max("active_until", window="168h"),
+                )
+
+            bv.App(url=os.environ["BEAVA_BASE_URL"]).register(ActivationEvent, PageActivity)
+            print('Pipeline registered')
+            "
         args:
           - |
             import beava as bv
