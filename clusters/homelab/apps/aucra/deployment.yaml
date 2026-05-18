@@ -31,7 +31,7 @@ spec:
           value: "3001"
         - name: SSP_API_URL
           value: http://aucra-ssp-api.aucra.svc.cluster.local:8080
-                - name: SSP_ADMIN_KEY
+        - name: SSP_ADMIN_KEY
           valueFrom:
             secretKeyRef:
               name: aucra-secret
